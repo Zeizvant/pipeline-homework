@@ -3,21 +3,73 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-trigger:
-- azure-pipelines
+trigger: none  # Disable automatic trigger for all branches
+
+pr:
+  branches:
+    include:
+      - '*' 
+
+pool:
+  vmImage: 'ubuntu-latest'
 
 variables:
   - group: tokens
 
-pool:
-  vmImage: ubuntu-latest
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-- script: echo $(key1)
+jobs: 
+- job: execute_tests
+  displayName: Run Test Automation
+  steps: 
+  - script: |
+      # Install Google Chrome
+      wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+      sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+      sudo apt-get update 
+      sudo apt-get install google-chrome-stable
+      # Install OpenJDK 17
+      sudo apt-get update
+      sudo apt-get install openjdk-17-jdk -y
+      # Install Maven
+      sudo apt-get install maven -y
+      # Install Allure (requires Node.js & npm)
+      curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+      sudo apt-get install -y nodejs
+      sudo npm install -g allure-commandline
+    displayName: Prepare Environment
+  - task: Maven@4
+    inputs:
+      mavenPomFile: 'pom.xml'
+      goals: 'test'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: 1.17
+      mavenVersionOption: 'Default'
+      mavenAuthenticateFeed: false
+      effectivePomSkip: false
+      sonarQubeRunAnalysis: false
+    displayName: Running Tests
+  - script: |
+      allure generate ./target/surefire-reports --clean -o allure-results
+    displayName: Generate Report
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: 'allure-results'
+      artifact: 'allure-report'
+    displayName: Publish Report
+    
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+# steps:
+# - task: Maven@3
+#   displayName: 'Build and Test'
+#   inputs:
+#     mavenPomFile: 'pom.xml'
+#     goals: 'clean test'
+#     options: '-Dkey1=$(key1)'  # Pass the key to Maven
+
+# - script: |
+#     echo "key1 value from pipeline: $(key1)"
+#   displayName: 'Print Key in CI/CD'
+#   condition: and(succeeded(), eq(variables['Agent.JobStatus'], 'Succeeded'))  # Print only on success
+
