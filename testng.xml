@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="Master Suite">
+    <test name="Rest Tests">
+        <classes>
+            <class name="ge.tbc.tbcacademy.rest.ContinentsTests"/>
+            <class name="ge.tbc.tbcacademy.rest.SoapDemoTests"/>
+        </classes>
+    </test>
+    <test name="Selenide Tests">
+        <packages>
+            <package name="ge.tbc.tbcacademy.selenide" />
+        </packages>
+    </test>
+</suite>
