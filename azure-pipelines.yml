@@ -53,7 +53,7 @@ jobs:
   - script: |
       allure generate --clean allure-results -o allure-report
       ls 
-    displayName: 'Generate Allure Report'
+    displayName: 'Generate Report'
   
   - task: DownloadPipelineArtifact@2
     inputs:
@@ -63,20 +63,20 @@ jobs:
       buildVersionToDownload: 'latestFromBranch'
       allowPartiallySucceededBuilds: true
       branchName: 'refs/heads/azure-pipelines'
-      artifactName: 'allure-results'
-      targetPath: '$(Pipeline.Workspace)/allure-results'
+      artifactName: 'allure-report'
+      targetPath: '$(Pipeline.Workspace)/allure-report'
+    displayName: Publish Report
 
   - task: PublishPipelineArtifact@1
     inputs:
-      targetPath: '$(Pipeline.Workspace)/allure-results'
-      artifact: 'allure-results'
+      targetPath: '$(Pipeline.Workspace)/allure-report'
+      artifact: 'allure-report'
     displayName: 'Publish Allure Results'
   
   - task: PublishAllureReport@1
     inputs:
       allureVersion: '2.28.0'
       testResultsDir: 'allure-report'
-
 
 schedules:
 - cron: "0 0 * * 0"
