@@ -31,14 +31,12 @@ stages:
         sudo apt-get install -y google-chrome-stable
         sudo apt-get update
         sudo apt-get install -y openjdk-17-jdk
-        java -version
         sudo apt-get update
         sudo apt-get install -y maven
-        mvn -version
         wget https://github.com/allure-framework/allure2/releases/download/2.28.0/allure-2.28.0.tgz
         sudo tar -zxvf allure-2.28.0.tgz -C /opt/
         sudo ln -s /opt/allure-2.28.0/bin/allure /usr/bin/allure
-        allure --version
+        echo allure --version
       displayName: 'Prepare Environment'
 
 - stage: RunTests
