@@ -64,8 +64,10 @@ jobs:
     inputs:
       buildType: 'specific'
       project: 'c29df2a7-480e-4ab4-84be-13062beac82d'
-      definition: '3'
-      buildVersionToDownload: 'latest'
+      definition: '1'
+      buildVersionToDownload: 'latestFromBranch'
+      branchName: 'refs/heads/azure-pipelines'
+      allowPartiallySucceededBuilds: true
       artifactName: 'allure-results'
       targetPath: '$(Pipeline.Workspace)'
 
