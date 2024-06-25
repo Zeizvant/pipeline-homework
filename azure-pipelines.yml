@@ -39,11 +39,11 @@ jobs:
       sudo ln -s /opt/allure-2.28.0/bin/allure /usr/bin/allure
       allure --version
     displayName: 'Prepare Environment'
+    
   - task: Maven@3
     inputs:
          mavenPomFile: 'pom.xml'
-         goals: 'clean test'
-         options: '"-Dsurefire.suiteXmlFiles=$(Build.SourcesDirectory)/testng.xml"'
+         goals: 'test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'
          javaHomeOption: 'JDKVersion'
          jdkVersionOption: '1.17'
          jdkArchitectureOption: 'x64'
@@ -54,7 +54,6 @@ jobs:
          effectivePomSkip: false
          sonarQubeRunAnalysis: false
     continueOnError: true
-    displayName: 'Run Maven Tests'
 
   - script: |
       allure generate --clean allure-results -o allure-report
