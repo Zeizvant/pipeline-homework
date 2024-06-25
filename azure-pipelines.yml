@@ -52,7 +52,6 @@ jobs:
 
   - script: |
       allure generate --clean allure-results -o allure-report
-      ls 
     displayName: 'Generate Report'
   
   - task: DownloadPipelineArtifact@2
@@ -63,24 +62,24 @@ jobs:
       buildVersionToDownload: 'latestFromBranch'
       allowPartiallySucceededBuilds: true
       branchName: 'refs/heads/azure-pipelines'
-      artifactName: 'allure-report'
-      targetPath: '$(Pipeline.Workspace)/allure-report'
-    displayName: Publish Report
+      artifactName: 'allure-results'
+      targetPath: '$(System.DefaultWorkingDirectory)/public'
+    displayName: Download allure result
 
   - task: PublishPipelineArtifact@1
     inputs:
-      targetPath: '$(Pipeline.Workspace)/allure-report'
-      artifact: 'allure-report'
-    displayName: 'Publish Allure Results'
+      targetPath: 'allure-results'
+      artifact: 'allure-results'
+    displayName: 'Publish Report'
   
   - task: PublishAllureReport@1
     inputs:
       allureVersion: '2.28.0'
-      testResultsDir: 'allure-report'
+      testResultsDir: 'allure-results'
 
 schedules:
 - cron: "0 0 * * 0"
-  displayName: Weekly Test Execution
+  displayName: Weekly Tests
   branches:
     include:
       - azure-pipelines
