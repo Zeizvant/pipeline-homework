@@ -64,44 +64,33 @@ stages:
 
 - stage: GenerateAndPublishAllureReport
   displayName: Generate and Publish Allure Report
-  dependsOn: RunTests
   jobs:
   - job: GenerateReport
     displayName: Generate Report
     steps:
-    - script: |
-        wget https://github.com/allure-framework/allure2/releases/download/2.28.0/allure-2.28.0.tgz
-        sudo tar -zxvf allure-2.28.0.tgz -C /opt/
-        sudo ln -s /opt/allure-2.28.0/bin/allure /usr/bin/allure
-        echo 'export PATH=$PATH:/opt/allure-2.28.0/bin' >> ~/.bashrc
-        source ~/.bashrc
-        allure generate --clean allure-results -o allure-report
-      displayName: 'Generate Allure Report'
-  - job: PublishArtifact
-    displayName: Publish Artifact
-    dependsOn: GenerateReport
-    steps:
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish Allure Report'
-      inputs:
-        targetPath: 'allure-results'
-        artifact: 'allure-report'
-  
-- stage: PublishToAzureDevOps
-  displayName: Publish to Azure DevOps
-  dependsOn: GenerateAndPublishAllureReport
-  jobs:
-  - job: PublishReport
-    displayName: Publish Report to Azure DevOps
-    steps:
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download Allure Report'
-      inputs:
-        artifactName: 'allure-results'
-        targetPath: '$(System.DefaultWorkingDirectory)/public'
-    - task: PublishAllureReport@1
-      inputs:
-        testResultsDir: 'allure-results'
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'specific'
+          project: 'c29df2a7-480e-4ab4-84be-13062beac82d'
+          definition: '1'
+          buildVersionToDownload: 'latestFromBranch'
+          artifactName: 'allure-results'
+          targetPath: '$(System.DefaultWorkingDirectory)/public'
+      - script: |
+            # chmod +x test.sh
+            # ./test.sh
+            echo "Generating Allure Report..."
+            allure generate --clean allure-results -o allure-report
+        displayName: 'Generate Allure Report'
+      - task: PublishPipelineArtifact@1
+        inputs:
+            targetPath: 'allure-results'
+            artifactName: 'allure-results'
+            publishLocation: 'pipeline'
+      - task: PublishAllureReport@1
+        inputs:
+            allureVersion: '2.28.0'
+            testResultsDir: 'allure-results'
 
 schedules:
   - cron: "0 0 * * 0" 
