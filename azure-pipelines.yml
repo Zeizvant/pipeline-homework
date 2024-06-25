@@ -44,7 +44,13 @@ stages:
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'test'
-        options: 'clean test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'  
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: 1.17
+        mavenAuthenticateFeed: false
+        publishJUnitResults: true
+        mavenOptions: 'Default'
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        options: 'test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'  
 
 - stage: GenerateAndPublishAllureReport
   displayName: Generate and Publish Allure Report
