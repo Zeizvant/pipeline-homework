@@ -97,8 +97,8 @@ stages:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download Allure Report'
       inputs:
-        artifact: 'allure-report'
-        path: 'allure-results'
+        artifactName: 'allure-results'
+        targetPath: '$(System.DefaultWorkingDirectory)/public'
     - task: PublishAllureReport@1
       inputs:
         testResultsDir: 'allure-results'
