@@ -37,7 +37,7 @@ jobs:
   - task: Maven@3
     inputs:
          mavenPomFile: 'pom.xml'
-         goals: 'test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'
+         goals: 'test'
          javaHomeOption: 'JDKVersion'
          jdkVersionOption: '1.17'
          jdkArchitectureOption: 'x64'
