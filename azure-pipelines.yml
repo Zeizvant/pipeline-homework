@@ -54,8 +54,16 @@ jobs:
          sonarQubeRunAnalysis: false
     continueOnError: true
   - script: |
+        chmod +x check_allure_history.sh
+        ./check_allure_history.sh
         allure generate --clean allure-results -o allure-report
 
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: '$(Pipeline.Workspace)/allure-report'
+      artifactName: 'allure-report'
+      publishLocation: 'pipeline'
+      displayName: 'Publish Allure Report'
   - task: DownloadPipelineArtifact@2
     inputs:
       buildType: 'specific'
@@ -64,19 +72,14 @@ jobs:
       buildVersionToDownload: 'latestFromBranch'
       branchName: 'refs/heads/azure-pipelines'
       allowPartiallySucceededBuilds: true
-      artifactName: 'allure-results'
-      targetPath: '$(System.DefaultWorkingDirectory)/public'
-    displayName: 'Generate Allure Report'
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-        targetPath: 'allure-results'
-        artifactName: 'allure-results'
-        publishLocation: 'pipeline'
+      artifact: 'allure-results'
+      targetPath: '$(Pipeline.Workspace)/allure-report'
+    displayName: 'Download Allure Artifact'
+  
   - task: PublishAllureReport@1
     inputs:
-        allureVersion: '2.28.0'
-        testResultsDir: 'allure-results'
+      allureVersion: '2.28.0'
+      testResultsDir: '$(Pipeline.Workspace)/allure-report'
 
 schedules:
 - cron: "0 0 * * 0"
