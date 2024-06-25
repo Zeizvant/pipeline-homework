@@ -65,9 +65,7 @@ jobs:
       artifactName: 'allure-results'
       targetPath: '$(System.DefaultWorkingDirectory)/public'
   - script: |
-        # chmod +x test.sh
-        # ./test.sh
-        echo "Generating Allure Report..."
+        ls '$(System.DefaultWorkingDirectory)/public'
         allure generate --clean allure-results -o allure-report
     displayName: 'Generate Allure Report'
 
