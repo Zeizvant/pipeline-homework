@@ -42,7 +42,8 @@ jobs:
   - task: Maven@3
     inputs:
          mavenPomFile: 'pom.xml'
-         goals: 'test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'
+         goals: 'clean test'
+         options: '"-Dsurefire.suiteXmlFiles=$(Build.SourcesDirectory)/testng.xml"'
          javaHomeOption: 'JDKVersion'
          jdkVersionOption: '1.17'
          jdkArchitectureOption: 'x64'
@@ -53,33 +54,31 @@ jobs:
          effectivePomSkip: false
          sonarQubeRunAnalysis: false
     continueOnError: true
-  - script: |
-        chmod +x check_allure_history.sh
-        ./check_allure_history.sh
-        allure generate --clean allure-results -o allure-report
+    displayName: 'Run Maven Tests'
 
-  - task: PublishPipelineArtifact@1
+  - script: |
+      allure generate --clean allure-results -o allure-report
+    displayName: 'Generate Allure Report'
+
+  - task: CopyFiles@2
     inputs:
-      targetPath: '$(Pipeline.Workspace)/allure-report'
-      artifactName: 'allure-report'
-      publishLocation: 'pipeline'
-      displayName: 'Publish Allure Report'
-  - task: DownloadPipelineArtifact@2
+      SourceFolder: '$(Build.SourcesDirectory)/allure-report'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    displayName: 'Copy Allure Report to Artifacts'
+
+  - task: PublishBuildArtifacts@1
     inputs:
-      buildType: 'specific'
-      project: 'c29df2a7-480e-4ab4-84be-13062beac82d'
-      definition: '1'
-      buildVersionToDownload: 'latestFromBranch'
-      branchName: 'refs/heads/azure-pipelines'
-      allowPartiallySucceededBuilds: true
-      artifact: 'allure-results'
-      targetPath: '$(Pipeline.Workspace)/allure-report'
-    displayName: 'Download Allure Artifact'
-  
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'allure-report'
+      publishLocation: 'Container'
+    displayName: 'Publish Allure Report Artifact'
+
   - task: PublishAllureReport@1
     inputs:
-      allureVersion: '2.28.0'
-      testResultsDir: '$(Pipeline.Workspace)/allure-report'
+        allureVersion: '2.28.0'
+        testResultsDir: 'allure-results'
+    displayName: 'Generate Allure Report for Azure DevOps'
+
 
 schedules:
 - cron: "0 0 * * 0"
