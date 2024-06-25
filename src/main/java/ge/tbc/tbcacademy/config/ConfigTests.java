@@ -10,6 +10,7 @@ import ge.tbc.tbcacademy.listeners.TestListener;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.testng.annotations.*;
@@ -20,31 +21,29 @@ import static ge.tbc.tbcacademy.data.Constants.INVALID_BROWSER_PARAMETER_MESSAGE
 @Listeners({TestListener.class, SuiteListener.class, ReportListener.class, SoftAsserts.class})
 public class ConfigTests {
     WebDriver driver;
-
-    // Change at least two Selenide default Configuration for all project tests
-    // All tests should be started with new webdriver instance
     @BeforeClass(alwaysRun = true)
     @Parameters("browser")
     public void setUp(@Optional("chrome") String browser){
-        switch (browser.toLowerCase()) {
-            case "chrome":
-                WebDriverManager.chromedriver().setup();
-                driver = new ChromeDriver();
-                break;
-            case "firefox":
-                WebDriverManager.firefoxdriver().setup();
-                driver = new FirefoxDriver();
-                break;
-            case "edge":
-                WebDriverManager.edgedriver().setup();
-                driver = new EdgeDriver();
-                break;
-            default:
-                throw new IllegalArgumentException(INVALID_BROWSER_PARAMETER_MESSAGE);
+        String token = System.getenv("Token");
+
+        if (token != null) {
+            System.out.println("Test running in Azure DevOps CI/CD, using key1: " + token);
+
+            // Additional Chrome options for running in Docker
+            ChromeOptions options = new ChromeOptions();
+            options.addArguments("--headless=new");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+
+            driver = new ChromeDriver(options);
+        } else {
+            System.out.println("Test running locally");
+
+            driver = new ChromeDriver();
+            driver.manage().window().maximize();
         }
         Configuration.timeout = 3000;
         Configuration.assertionMode = SOFT;
-        driver.manage().window().maximize();
         WebDriverRunner.setWebDriver(driver);
     }
     @AfterClass(alwaysRun = true)
