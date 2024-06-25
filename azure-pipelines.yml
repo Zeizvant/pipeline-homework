@@ -53,6 +53,8 @@ jobs:
          effectivePomSkip: false
          sonarQubeRunAnalysis: false
     continueOnError: true
+  - script: |
+        allure generate --clean allure-results -o allure-report
 
   - task: DownloadPipelineArtifact@2
     inputs:
@@ -64,9 +66,6 @@ jobs:
       allowPartiallySucceededBuilds: true
       artifactName: 'allure-results'
       targetPath: '$(System.DefaultWorkingDirectory)/public'
-  - script: |
-        ls '$(System.DefaultWorkingDirectory)/public'
-        allure generate --clean allure-results -o allure-report
     displayName: 'Generate Allure Report'
 
   - task: PublishPipelineArtifact@1
