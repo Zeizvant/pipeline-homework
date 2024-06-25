@@ -17,8 +17,8 @@ variables:
   - group: tokens
 
 jobs:
-  - job: InstallDependencies
-    displayName: Install Dependencies
+  - job: execute_tests
+    displayName: Run Test Automation
     steps:
     - script: |
         echo "##vso[task.setvariable variable=Token]$(key1)"
@@ -50,6 +50,7 @@ jobs:
         mavenVersionOption: 'Default'
         effectivePomSkip: false
         sonarQubeRunAnalysis: false 
+      displayName: Running Tests
     - task: DownloadPipelineArtifact@2
       inputs:
           buildType: 'specific'
@@ -63,7 +64,6 @@ jobs:
     - script: |
           # chmod +x test.sh
           # ./test.sh
-          echo "Generating Allure Report..."
           allure generate --clean allure-results -o allure-report
       displayName: 'Generate Allure Report'
     - task: PublishPipelineArtifact@1
@@ -71,6 +71,7 @@ jobs:
           targetPath: 'allure-results'
           artifactName: 'allure-results'
           publishLocation: 'pipeline'
+      displayName: Publish Report
     - task: PublishAllureReport@1
       inputs:
           allureVersion: '2.28.0'
