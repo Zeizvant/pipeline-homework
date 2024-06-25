@@ -16,10 +16,7 @@ pool:
 variables:
   - group: tokens
 
-stages:
-- stage: PrepareEnvironment
-  displayName: Prepare Environment
-  jobs:
+jobs:
   - job: InstallDependencies
     displayName: Install Dependencies
     steps:
@@ -40,14 +37,6 @@ stages:
         source ~/.bashrc
         allure --version
       displayName: 'Prepare Environment'
-
-- stage: RunTests
-  displayName: Run Tests
-  dependsOn: PrepareEnvironment
-  jobs:
-  - job: ExecuteTests
-    displayName: Execute Tests
-    steps:
     - task: Maven@3
       inputs:
         mavenPomFile: 'pom.xml'
@@ -61,36 +50,29 @@ stages:
         mavenVersionOption: 'Default'
         effectivePomSkip: false
         sonarQubeRunAnalysis: false 
-
-- stage: GenerateAndPublishAllureReport
-  displayName: Generate and Publish Allure Report
-  jobs:
-  - job: GenerateReport
-    displayName: Generate Report
-    steps:
-      - task: DownloadPipelineArtifact@2
-        inputs:
+    - task: DownloadPipelineArtifact@2
+      inputs:
           buildType: 'specific'
           project: 'c29df2a7-480e-4ab4-84be-13062beac82d'
           definition: '1'
           buildVersionToDownload: 'latestFromBranch'
           artifactName: 'allure-results'
           targetPath: '$(System.DefaultWorkingDirectory)/public'
-      - script: |
-            # chmod +x test.sh
-            # ./test.sh
-            echo "Generating Allure Report..."
-            allure generate --clean allure-results -o allure-report
-        displayName: 'Generate Allure Report'
-      - task: PublishPipelineArtifact@1
-        inputs:
-            targetPath: 'allure-results'
-            artifactName: 'allure-results'
-            publishLocation: 'pipeline'
-      - task: PublishAllureReport@1
-        inputs:
-            allureVersion: '2.28.0'
-            testResultsDir: 'allure-results'
+    - script: |
+          # chmod +x test.sh
+          # ./test.sh
+          echo "Generating Allure Report..."
+          allure generate --clean allure-results -o allure-report
+      displayName: 'Generate Allure Report'
+    - task: PublishPipelineArtifact@1
+      inputs:
+          targetPath: 'allure-results'
+          artifactName: 'allure-results'
+          publishLocation: 'pipeline'
+    - task: PublishAllureReport@1
+      inputs:
+          allureVersion: '2.28.0'
+          testResultsDir: 'allure-results'
 
 schedules:
   - cron: "0 0 * * 0" 
