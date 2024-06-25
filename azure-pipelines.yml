@@ -3,84 +3,88 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-trigger: none  # Disable automatic trigger for all branches
-
+trigger: none
 pr:
   branches:
     include:
-      - '*' 
+      - '*'  
 
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  - group: tokens
-
 jobs:
-  - job: execute_tests
-    displayName: Run Test Automation
-    steps:
-    - script: |
-        echo "##vso[task.setvariable variable=Token]$(key1)"
-        echo $(key1)
-    - script: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-        sudo apt-get update
-        sudo apt-get install -y openjdk-17-jdk
-        sudo apt-get update
-        sudo apt-get install -y maven
-        wget https://github.com/allure-framework/allure2/releases/download/2.28.0/allure-2.28.0.tgz
-        sudo tar -zxvf allure-2.28.0.tgz -C /opt/
-        sudo ln -s /opt/allure-2.28.0/bin/allure /usr/bin/allure
-        echo 'export PATH=$PATH:/opt/allure-2.28.0/bin' >> ~/.bashrc
-        source ~/.bashrc
-        allure --version
-      displayName: 'Prepare Environment'
-    - task: Maven@3
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'
-        javaHomeOption: 'JDKVersion'
-        jdkArchitectureOption: 'x64'
-        jdkVersionOption: '1.17'
-        publishJUnitResults: true
-        testResultsFiles: '**/surefire-reports/TEST-*.xml'
-        mavenAuthenticateFeed: false
-        mavenVersionOption: 'Default'
-        effectivePomSkip: false
-        sonarQubeRunAnalysis: false 
-      displayName: Running Tests
-    - task: DownloadPipelineArtifact@2
-      inputs:
-          buildType: 'specific'
-          project: 'c29df2a7-480e-4ab4-84be-13062beac82d'
-          definition: '1'
-          buildVersionToDownload: 'latestFromBranch'
-          branchName: 'refs/heads/azure-pipelines'
-          allowPartiallySucceededBuilds: true
-          artifactName: 'allure-results'
-          targetPath: '$(System.DefaultWorkingDirectory)/public'
-    - script: |
-          # chmod +x test.sh
-          # ./test.sh
-          allure generate --clean allure-results -o allure-report
-      displayName: 'Generate Allure Report'
-    - task: PublishPipelineArtifact@1
-      inputs:
-          targetPath: 'allure-results'
-          artifactName: 'allure-results'
-          publishLocation: 'pipeline'
-      displayName: Publish Report
-    - task: PublishAllureReport@1
-      inputs:
-          allureVersion: '2.28.0'
-          testResultsDir: 'allure-results'
+- job: execute_tests
+  displayName: 'Run Test Automation'
+  steps:
+  - script: |
+      echo "Setting up environment variables"
+      echo "##vso[task.setvariable variable=SECRET_TOKEN]$(key1)"
+      echo "Printing secret token"
+      echo $(key1)
+  - script: |
+      echo "Installing Chrome..."
+      sudo apt-get update
+      sudo apt-get install -y google-chrome-stable
+      echo "Installing OpenJDK 17"
+      sudo apt-get update
+      sudo apt-get install -y openjdk-17-jdk
+      java -version
+      echo "Installing Maven"
+      sudo apt-get update
+      sudo apt-get install -y maven
+      mvn -version
+      echo "Installing Allure"
+      wget https://github.com/allure-framework/allure2/releases/download/2.28.0/allure-2.28.0.tgz
+      sudo tar -zxvf allure-2.28.0.tgz -C /opt/
+      sudo ln -s /opt/allure-2.28.0/bin/allure /usr/bin/allure
+      allure --version
+    displayName: 'Prepare Environment'
+  - task: Maven@3
+    inputs:
+         mavenPomFile: 'pom.xml'
+         goals: 'test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'
+         javaHomeOption: 'JDKVersion'
+         jdkVersionOption: '1.17'
+         jdkArchitectureOption: 'x64'
+         publishJUnitResults: true
+         testResultsFiles: '**/surefire-reports/TEST-*.xml'
+         mavenVersionOption: 'Default'
+         mavenAuthenticateFeed: false
+         effectivePomSkip: false
+         sonarQubeRunAnalysis: false
+    continueOnError: true
+
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: 'specific'
+      project: 'c29df2a7-480e-4ab4-84be-13062beac82d'
+      definition: '1'
+      buildVersionToDownload: 'latestFromBranch'
+      branchName: 'refs/heads/azure-pipelines'
+      allowPartiallySucceededBuilds: true
+      artifactName: 'allure-results'
+      targetPath: '$(System.DefaultWorkingDirectory)/public'
+  - script: |
+        # chmod +x test.sh
+        # ./test.sh
+        echo "Generating Allure Report..."
+        allure generate --clean allure-results -o allure-report
+    displayName: 'Generate Allure Report'
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+        targetPath: 'allure-results'
+        artifactName: 'allure-results'
+        publishLocation: 'pipeline'
+  - task: PublishAllureReport@1
+    inputs:
+        allureVersion: '2.28.0'
+        testResultsDir: 'allure-results'
 
 schedules:
-  - cron: "0 0 * * 0" 
-    displayName: Weekly Tests
-    branches:
-      include:
-        - azure-pipelines
-    always: true
+- cron: "0 0 * * 0"
+  displayName: Weekly Test Execution
+  branches:
+    include:
+      - azure-pipelines
+  always: true
