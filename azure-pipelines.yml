@@ -41,62 +41,62 @@ stages:
         allure --version
       displayName: 'Prepare Environment'
 
-# - stage: RunTests
-#   displayName: Run Tests
-#   dependsOn: PrepareEnvironment
-#   jobs:
-#   - job: ExecuteTests
-#     displayName: Execute Tests
-#     steps:
-#     - task: Maven@3
-#       inputs:
-#         mavenPomFile: 'pom.xml'
-#         goals: 'test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'
-#         javaHomeOption: 'JDKVersion'
-#         jdkArchitectureOption: 'x64'
-#         jdkVersionOption: '1.17'
-#         publishJUnitResults: true
-#         testResultsFiles: '**/surefire-reports/TEST-*.xml'
-#         mavenAuthenticateFeed: false
-#         mavenVersionOption: 'Default'
-#         effectivePomSkip: false
-#         sonarQubeRunAnalysis: false 
+- stage: RunTests
+  displayName: Run Tests
+  dependsOn: PrepareEnvironment
+  jobs:
+  - job: ExecuteTests
+    displayName: Execute Tests
+    steps:
+    - task: Maven@3
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'test -Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'
+        javaHomeOption: 'JDKVersion'
+        jdkArchitectureOption: 'x64'
+        jdkVersionOption: '1.17'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        mavenAuthenticateFeed: false
+        mavenVersionOption: 'Default'
+        effectivePomSkip: false
+        sonarQubeRunAnalysis: false 
 
-# - stage: GenerateAndPublishAllureReport
-#   displayName: Generate and Publish Allure Report
-#   dependsOn: RunTests
-#   jobs:
-#   - job: GenerateReport
-#     displayName: Generate Report
-#     steps:
-#     - script: |
-#         allure generate --clean allure-results -o allure-report
-#       displayName: 'Generate Allure Report'
-#   - job: PublishArtifact
-#     displayName: Publish Artifact
-#     dependsOn: GenerateReport
-#     steps:
-#     - task: PublishPipelineArtifact@1
-#       displayName: 'Publish Allure Report'
-#       inputs:
-#         targetPath: 'allure-results'
-#         artifact: 'allure-report'
+- stage: GenerateAndPublishAllureReport
+  displayName: Generate and Publish Allure Report
+  dependsOn: RunTests
+  jobs:
+  - job: GenerateReport
+    displayName: Generate Report
+    steps:
+    - script: |
+        allure generate --clean allure-results -o allure-report
+      displayName: 'Generate Allure Report'
+  - job: PublishArtifact
+    displayName: Publish Artifact
+    dependsOn: GenerateReport
+    steps:
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Allure Report'
+      inputs:
+        targetPath: 'allure-results'
+        artifact: 'allure-report'
   
-# - stage: PublishToAzureDevOps
-#   displayName: Publish to Azure DevOps
-#   dependsOn: GenerateAndPublishAllureReport
-#   jobs:
-#   - job: PublishReport
-#     displayName: Publish Report to Azure DevOps
-#     steps:
-#     - task: DownloadPipelineArtifact@2
-#       displayName: 'Download Allure Report'
-#       inputs:
-#         artifact: 'allure-report'
-#         path: 'allure-results'
-#     - task: PublishAllureReport@1
-#       inputs:
-#         testResultsDir: 'allure-results'
+- stage: PublishToAzureDevOps
+  displayName: Publish to Azure DevOps
+  dependsOn: GenerateAndPublishAllureReport
+  jobs:
+  - job: PublishReport
+    displayName: Publish Report to Azure DevOps
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Allure Report'
+      inputs:
+        artifact: 'allure-report'
+        path: 'allure-results'
+    - task: PublishAllureReport@1
+      inputs:
+        testResultsDir: 'allure-results'
 
 schedules:
   - cron: "0 0 * * 0" 
