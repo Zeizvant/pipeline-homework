@@ -22,17 +22,16 @@ jobs:
   displayName: Run Test Automation
   steps: 
   - script: |
-      # Install Google Chrome
+      echo "##vso[task.setvariable variable=Token;isSecret=true]$(key1)"
+      echo $(key1)
+  - script: |
       wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
       sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
       sudo apt-get update 
       sudo apt-get install google-chrome-stable
-      # Install OpenJDK 17
       sudo apt-get update
       sudo apt-get install openjdk-17-jdk -y
-      # Install Maven
       sudo apt-get install maven -y
-      # Install Allure (requires Node.js & npm)
       curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
       sudo apt-get install -y nodejs
       sudo npm install -g allure-commandline
@@ -41,6 +40,7 @@ jobs:
     inputs:
       mavenPomFile: 'pom.xml'
       goals: 'test'
+      options: '-Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xmltestng.xml'
       publishJUnitResults: true
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
       javaHomeOption: 'JDKVersion'
@@ -49,6 +49,7 @@ jobs:
       mavenAuthenticateFeed: false
       effectivePomSkip: false
       sonarQubeRunAnalysis: false
+  continueOnError: true;
     displayName: Running Tests
   - script: |
       allure generate ./target/surefire-reports --clean -o allure-results
@@ -58,18 +59,26 @@ jobs:
       targetPath: 'allure-results'
       artifact: 'allure-report'
     displayName: Publish Report
-    
+  
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: 'specific'
+      project: 'c29df2a7-480e-4ab4-84be-13062beac82d'
+      definition: '1'
+      buildVersionToDownload: 'latest'
+      allowPartiallySucceededBuilds: true
+      artifactName: 'allure-report'
+  - script: |
+      allure generate --clean $(Build.SourcesDirectory)/allure-history $(Build.SourcesDirectory)/allure-results -o allure-report
+  
 
-# steps:
-# - task: Maven@3
-#   displayName: 'Build and Test'
-#   inputs:
-#     mavenPomFile: 'pom.xml'
-#     goals: 'clean test'
-#     options: '-Dkey1=$(key1)'  # Pass the key to Maven
+schedules:
+  - cron: "0 0 * * 0" 
+    displayName: Weekly Tests
+    branches:
+      include:
+        - azure-pipelines
 
-# - script: |
-#     echo "key1 value from pipeline: $(key1)"
-#   displayName: 'Print Key in CI/CD'
-#   condition: and(succeeded(), eq(variables['Agent.JobStatus'], 'Succeeded'))  # Print only on success
+    always: true;
+  
 
